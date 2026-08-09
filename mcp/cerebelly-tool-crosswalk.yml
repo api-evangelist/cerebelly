@@ -1,0 +1,186 @@
+generated: '2026-08-09'
+method: derived
+source: mcp/cerebelly-ucp-tools-list.json + graphql/cerebelly-storefront.graphql
+name: Cerebelly UCP MCP ↔ Storefront GraphQL crosswalk
+description: >-
+  Binds each of the 13 live UCP MCP tools to the Storefront GraphQL field(s) that
+  back the same capability. Cerebelly publishes NO OpenAPI, so the usual rest[]
+  column is empty on every row and the binding column is `graphql` throughout —
+  the crosswalk is still emitted because both a machine-readable MCP surface and a
+  machine-readable GraphQL surface are live and anonymously introspectable, which
+  is exactly the pair this artifact exists to reconcile. Every field name below was
+  read out of the live introspection result; none were assumed. Confidence is set
+  honestly: the UCP checkout family has no Checkout type in the 2026-01 Storefront
+  schema, so those rows bind to the cart-completion mutations that replaced it.
+surfaces:
+  openapi: null
+  openapi_note: >-
+    No OpenAPI is published on any Cerebelly host. /openapi.json, /openapi.yaml,
+    /swagger.json, /v1/openapi.json, /api-docs, /docs and /redoc all 404 on
+    cerebelly.com, and api./developer./docs.cerebelly.com do not resolve.
+  graphql:
+    endpoint: https://cerebelly.com/api/2026-01/graphql.json
+    gated: false
+    note: Anonymous introspection returns HTTP 200 — 416 types, 35 queries, 41 mutations.
+  mcp:
+    endpoint: https://cerebelly.com/api/ucp/mcp
+    gated: false
+    note: Anonymous tools/list returns HTTP 200 with 13 tools and full inputSchemas.
+  customer_account_api:
+    endpoint: https://account.cerebelly.com/customer/api/2026-01/graphql
+    gated: true
+    note: Returns HTTP 401 anonymously; requires an OIDC customer access token.
+crosswalk:
+- tool: search_catalog
+  category: catalog
+  rest: []
+  graphql: [search, predictiveSearch, products]
+  binding: graphql
+  confidence: high
+  note: >-
+    Both take a free-text query and return product connections. The MCP tool adds
+    UCP buyer context (address_country, currency, language, intent) that has no
+    Storefront GraphQL equivalent — GraphQL carries locale through @inContext.
+- tool: lookup_catalog
+  category: catalog
+  rest: []
+  graphql: [nodes, products]
+  binding: graphql
+  confidence: high
+  note: Batch id resolution. The MCP tool caps ids at maxItems 10; nodes has no such cap.
+- tool: get_product
+  category: catalog
+  rest: []
+  graphql: [product, productByHandle, productRecommendations]
+  binding: graphql
+  confidence: high
+  note: >-
+    get_product accepts catalog.selected[] variant options, which maps to the
+    Product.variantBySelectedOptions field rather than to a root query.
+- tool: get_cart
+  category: cart
+  rest: []
+  graphql: [cart]
+  binding: graphql
+  confidence: high
+- tool: create_cart
+  category: cart
+  rest: []
+  graphql: [cartCreate]
+  binding: graphql
+  confidence: high
+  note: Both key line items on product-variant id plus quantity.
+- tool: update_cart
+  category: cart
+  rest: []
+  graphql:
+  - cartLinesAdd
+  - cartLinesUpdate
+  - cartLinesRemove
+  - cartAttributesUpdate
+  - cartNoteUpdate
+  - cartBuyerIdentityUpdate
+  - cartDiscountCodesUpdate
+  - cartGiftCardCodesAdd
+  - cartGiftCardCodesUpdate
+  - cartDeliveryAddressesUpdate
+  - cartSelectedDeliveryOptionsUpdate
+  binding: graphql
+  confidence: medium
+  note: >-
+    One composite MCP tool absorbs eleven granular GraphQL mutations. The mapping
+    is many-to-one by capability, not one-to-one by signature.
+- tool: cancel_cart
+  category: cart
+  rest: []
+  graphql: [cartRemovePersonalData]
+  binding: graphql
+  confidence: low
+  note: >-
+    The Storefront schema has no cartDelete mutation. cartRemovePersonalData is the
+    closest published field; treat the binding as approximate.
+- tool: create_checkout
+  category: checkout
+  rest: []
+  graphql: [cartCreate, cartPrepareForCompletion]
+  binding: graphql
+  confidence: low
+  note: >-
+    There is no Checkout type in the 2026-01 Storefront schema — Shopify retired it
+    in favour of the cart-completion flow. UCP reintroduces a first-class checkout
+    object that exists only on the MCP surface.
+- tool: get_checkout
+  category: checkout
+  rest: []
+  graphql: [cart, cartCompletionAttempt]
+  binding: graphql
+  confidence: low
+- tool: update_checkout
+  category: checkout
+  rest: []
+  graphql: [cartDeliveryAddressesUpdate, cartSelectedDeliveryOptionsUpdate, cartPaymentUpdate, cartBillingAddressUpdate]
+  binding: graphql
+  confidence: low
+- tool: complete_checkout
+  category: checkout
+  rest: []
+  graphql: [cartSubmitForCompletion]
+  binding: graphql
+  confidence: medium
+  note: >-
+    The only idempotent tool on the surface — meta.idempotency-key is REQUIRED.
+    cartSubmitForCompletion takes an attemptToken that plays the same role, so the
+    idempotency semantic survives the mapping.
+- tool: cancel_checkout
+  category: checkout
+  rest: []
+  graphql: []
+  binding: none
+  confidence: low
+  note: No Storefront GraphQL mutation cancels a submitted completion attempt.
+- tool: get_order
+  category: order
+  rest: []
+  graphql: []
+  binding: none
+  confidence: low
+  note: >-
+    The Order type exists in the Storefront schema but is only reachable through
+    Customer.orders behind a customer access token, or through the Customer Account
+    API at account.cerebelly.com, which returns 401 anonymously.
+mcp_only:
+- tool: get_order
+  reason: >-
+    No anonymous Storefront root query returns an order; the equivalent read lives
+    behind the gated Customer Account API.
+- tool: cancel_checkout
+  reason: No published GraphQL mutation cancels a checkout or completion attempt.
+- tool: create_checkout
+  reason: >-
+    UCP's first-class checkout object has no counterpart type in the Storefront
+    schema, which models the same flow as cart + completion attempt.
+graphql_only:
+- fields: [article, articles, blog, blogByHandle, blogs, page, pageByHandle, pages, menu, metaobject, metaobjects, sitemap, urlRedirects]
+  reason: >-
+    Content and navigation reads. UCP scopes itself to commerce, so the store's
+    editorial surface is reachable only over GraphQL (or the HTML/JSON storefront).
+- fields: [localization, locations, shop, paymentSettings, publicApiVersions, shopPayInstallmentsPricing]
+  reason: Store metadata and capability discovery with no UCP tool equivalent.
+- fields: [customerCreate, customerUpdate, customerRecover, customerReset, customerActivate, customerAccessTokenCreate, customerAccessTokenRenew, customerAccessTokenDelete, customerAddressCreate, customerAddressUpdate, customerAddressDelete, customerDefaultAddressUpdate]
+  reason: >-
+    Customer identity and address book. UCP delegates buyer identity to the payment
+    handler and the OIDC customer-account server instead.
+- fields: [cartClone, cartMetafieldsSet, cartMetafieldDelete, cartGiftCardCodesRemove, cartDeliveryAddressesAdd, cartDeliveryAddressesRemove, cartDeliveryAddressesReplace, shopPayPaymentRequestSessionCreate, shopPayPaymentRequestSessionSubmit]
+  reason: Granular cart and Shop Pay operations with no dedicated UCP tool.
+rest_only: []
+coverage:
+  mcp_tools: 13
+  mcp_tools_bound_to_graphql: 11
+  mcp_tools_unbound: 2
+  graphql_queries: 35
+  graphql_mutations: 41
+  graphql_fields_bound: 22
+  rest_operations: 0
+  high_confidence_rows: 5
+  medium_confidence_rows: 2
+  low_confidence_rows: 6

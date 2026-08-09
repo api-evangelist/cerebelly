@@ -1,0 +1,123 @@
+generated: '2026-08-09'
+method: searched
+source: https://cerebelly.com/.well-known/openid-configuration
+docs: https://cerebelly.com/agents.md
+name: Cerebelly authentication profile
+description: >-
+  Cerebelly publishes no OpenAPI, so this profile is built from the OpenID Connect
+  and OAuth metadata documents its own host serves, plus the observed behaviour of
+  each live endpoint. Three distinct authentication postures coexist on the domain:
+  the commerce agent surfaces are anonymous, the customer-account surface is a full
+  OIDC authorization-code flow with PKCE, and payment authorization is delegated
+  entirely to buyer-approved payment handlers.
+schemes:
+- id: none-anonymous
+  type: none
+  applies_to:
+  - https://cerebelly.com/api/ucp/mcp
+  - https://cerebelly.com/api/2026-01/graphql.json
+  - https://cerebelly.com/products.json
+  - https://cerebelly.com/collections/{handle}/products.json
+  description: >-
+    Catalog discovery, MCP tools/list, GraphQL introspection and the JSON product
+    endpoints all answer HTTP 200 with no credential of any kind. Verified
+    anonymously on 2026-08-09.
+  evidence:
+    url: https://cerebelly.com/api/ucp/mcp
+    http_status: 200
+    authenticated: false
+- id: shopify-storefront-oidc
+  type: openIdConnect
+  openIdConnectUrl: https://cerebelly.com/.well-known/openid-configuration
+  applies_to:
+  - https://account.cerebelly.com/customer/api/2026-01/graphql
+  description: >-
+    Shopify customer accounts. Authorization code flow with PKCE; the customer
+    account GraphQL API returns HTTP 401 without a bearer token.
+  issuer: https://shopify.com/authentication/74590912725
+  authorization_endpoint: https://account.cerebelly.com/authentication/oauth/authorize
+  token_endpoint: https://account.cerebelly.com/authentication/oauth/token
+  end_session_endpoint: https://account.cerebelly.com/authentication/logout
+  jwks_uri: https://account.cerebelly.com/authentication/.well-known/jwks.json
+  grant_types:
+  - authorization_code
+  - refresh_token
+  - 'urn:ietf:params:oauth:grant-type:jwt-bearer'
+  response_types:
+  - code
+  code_challenge_methods:
+  - S256
+  token_endpoint_auth_methods:
+  - client_secret_basic
+  id_token_signing_alg:
+  - RS256
+  subject_types:
+  - public
+  claims:
+  - iss
+  - sub
+  - aud
+  - exp
+  - iat
+  - nonce
+  - sid
+  - email
+  - email_verified
+  scopes: ../scopes/cerebelly-scopes.yml
+  evidence:
+    url: https://account.cerebelly.com/customer/api/2026-01/graphql
+    http_status: 401
+    authenticated: false
+- id: storefront-customer-access-token
+  type: http
+  scheme: bearer
+  header: Shopify-Storefront-Customer-Access-Token
+  applies_to:
+  - https://cerebelly.com/api/2026-01/graphql.json
+  description: >-
+    Optional per-request customer token on the Storefront API, minted by the
+    customerAccessTokenCreate mutation. Required only for the customer query and
+    the customer* mutations; every catalog and cart field works without it.
+  derived_from: graphql/cerebelly-storefront.graphql
+- id: ucp-payment-handler
+  type: delegated
+  applies_to:
+  - https://cerebelly.com/api/ucp/mcp (complete_checkout)
+  description: >-
+    Payment is not authenticated by the API caller. complete_checkout accepts a
+    payment instrument minted by one of three configured UCP payment handlers, and
+    both llms.txt and robots.txt state that an agent must not finalize payment
+    without an explicit, contemporaneous human approval step.
+  handlers:
+  - com.google.pay (gpay)
+  - dev.shopify.card (shopify.card)
+  - dev.shopify.shop_pay (shop_pay)
+  source: https://cerebelly.com/.well-known/ucp
+protected_resource_metadata:
+  url: https://cerebelly.com/.well-known/oauth-protected-resource
+  rfc: RFC 9728
+  resource: https://cerebelly.com
+  authorization_servers:
+  - https://account.cerebelly.com
+  - https://shopify.com/authentication/74590912725
+  bearer_methods_supported:
+  - header
+notes:
+- >-
+  There is no API key, no developer registration, and no partner program. Cerebelly
+  does not run a developer platform — the authenticated surface it exposes is the
+  Shopify customer-account layer for its own shoppers.
+- >-
+  The MCP endpoint answers tools/list anonymously, which is the exception rather
+  than the rule across the catalog; most MCP surfaces return an OAuth challenge.
+x-evidence:
+  fetched: '2026-08-09'
+  urls:
+  - url: https://cerebelly.com/.well-known/openid-configuration
+    http_status: 200
+  - url: https://cerebelly.com/.well-known/oauth-authorization-server
+    http_status: 200
+  - url: https://cerebelly.com/.well-known/oauth-protected-resource
+    http_status: 200
+  - url: https://account.cerebelly.com/customer/api/2026-01/graphql
+    http_status: 401

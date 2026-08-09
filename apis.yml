@@ -1,23 +1,160 @@
 aid: cerebelly
 name: Cerebelly
-description: 'Cerebelly is a company surfaced via the API Evangelist harvest backlog (source: secondary-market)
-  and added to the network as a stub for full-pipeline profiling.'
+description: 'Cerebelly is an organic baby and toddler food company founded by a practicing
+  neurosurgeon with a PhD in developmental neurobiology from Stanford, making veggie-first
+  purees, bone-broth protein purees, dairy-free smoothie pouches, Smart Bars and Clever
+  Bars formulated around 16 brain-supporting nutrients. Its direct-to-consumer storefront
+  at cerebelly.com runs on Shopify, and that storefront is its API surface: an anonymous
+  Universal Commerce Protocol (UCP) MCP endpoint exposing 13 catalog, cart and checkout
+  tools, a public Shopify Storefront GraphQL API answering unauthenticated introspection,
+  an OpenID Connect customer-account authorization server, and a published llms.txt /
+  agents.md pair that tells AI shopping agents how to transact. Cerebelly ships no
+  developer program of its own — every machine-readable surface here is the Shopify
+  commerce platform as deployed on Cerebelly''s own hosts.'
+image: https://cdn.shopify.com/s/files/1/0745/9091/2725/files/Cerebelly_Pantry_01_6a49ec81-265a-437a-ba3d-b5b94590be47.png?v=1759935945
 url: https://raw.githubusercontent.com/api-evangelist/cerebelly/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:secondary-market
-x-tier: stub
-x-tier-reason: harvest
 specificationVersion: '0.20'
 created: '2026-08-09'
 modified: '2026-08-09'
 tags:
 - Company
-apis: []
+- Baby Food
+- Consumer Packaged Goods
+- Food and Beverage
+- eCommerce
+- Retail
+- Direct to Consumer
+- Shopify
+- Agentic Commerce
+- Universal Commerce Protocol
+- Nutrition
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+x-enrichment:
+  date: '2026-08-09'
+  status: enriched
+  artifacts_added: 24
+  pass: local-v1
+x-coverage:
+  state: covered
+  reason: agent-commerce-surface-live
+  detail: >-
+    A consumer baby-food brand with no developer program still turned out to have
+    three live, anonymously readable machine surfaces on its own host — an MCP
+    endpoint returning 13 UCP commerce tools with full JSON Schemas, a Storefront
+    GraphQL API answering unauthenticated introspection with 416 types, and an
+    llms.txt/agents.md pair carrying a real agent policy. No OpenAPI and no A2A
+    agent card exist anywhere on the domain.
+  evidence:
+  - url: https://cerebelly.com/api/ucp/mcp
+    status: 200
+  - url: https://cerebelly.com/api/2026-01/graphql.json
+    status: 200
+  - url: https://cerebelly.com/llms.txt
+    status: 200
+  - url: https://cerebelly.com/.well-known/ucp
+    status: 200
+  - url: https://cerebelly.com/.well-known/agent-card.json
+    status: 404
+  - url: https://cerebelly.com/openapi.json
+    status: 404
+  checked: '2026-08-09'
+apis:
+- aid: cerebelly-ucp-commerce-mcp
+  name: Cerebelly UCP Commerce MCP
+  description: 'Cerebelly''s Universal Commerce Protocol (UCP) MCP endpoint, served
+    anonymously from the storefront host. A tools/list call returns 13 tools with full
+    JSON Schema draft 2020-12 input schemas covering catalog search and lookup, product
+    detail, cart lifecycle, and the full checkout lifecycle through buyer-approved
+    completion. Checkout completion carries an idempotency-key. This is the Shopify
+    UCP implementation as deployed on cerebelly.com.'
+  humanURL: https://cerebelly.com/llms.txt
+  baseURL: https://cerebelly.com/api/ucp/mcp
+  tags:
+  - MCP
+  - Agentic Commerce
+  - Universal Commerce Protocol
+  - Checkout
+  - Catalog
+  properties:
+  - type: MCPServer
+    url: mcp/cerebelly-mcp.yml
+  - type: ToolCrosswalk
+    url: mcp/cerebelly-tool-crosswalk.yml
+  - type: JSONSchema
+    url: json-schema/cerebelly-ucp-tool-schemas.json
+  - type: Documentation
+    url: https://cerebelly.com/agents.md
+- aid: cerebelly-storefront-graphql
+  name: Cerebelly Storefront GraphQL API
+  description: 'The Shopify Storefront GraphQL API as served from cerebelly.com. Answers
+    unauthenticated introspection: 416 types, 35 root queries and 41 mutations covering
+    products, collections, blog articles, pages, menus, metaobjects, predictive search,
+    localization, cart lifecycle and Shop Pay. Date-based API versioning (2025-10 through
+    2026-07 supported) is discoverable through the publicApiVersions query.'
+  humanURL: https://cerebelly.com/agents.md
+  baseURL: https://cerebelly.com/api/2026-01/graphql.json
+  tags:
+  - GraphQL
+  - Storefront
+  - eCommerce
+  - Catalog
+  properties:
+  - type: GraphQL
+    url: graphql/cerebelly-storefront.graphql
+  - type: Lifecycle
+    url: lifecycle/cerebelly-lifecycle.yml
 common:
+- type: DomainSecurity
+  url: security/cerebelly-domain-security.yml
 - type: Website
-  url: https://www.nasdaqprivatemarket.com/
+  url: https://cerebelly.com/
+- type: Documentation
+  url: https://cerebelly.com/agents.md
+- type: LLMsTxt
+  url: llms/cerebelly-llms.txt
+- type: WellKnown
+  url: well-known/cerebelly-well-known.yml
+- type: Authentication
+  url: authentication/cerebelly-authentication.yml
+- type: OAuthScopes
+  url: scopes/cerebelly-scopes.yml
+- type: Conventions
+  url: conventions/cerebelly-conventions.yml
+- type: Idempotency
+  url: conventions/cerebelly-conventions.yml
+- type: Conformance
+  url: conformance/cerebelly-conformance.yml
+- type: ErrorCatalog
+  url: errors/cerebelly-problem-types.yml
+- type: Lifecycle
+  url: lifecycle/cerebelly-lifecycle.yml
+- type: DataModel
+  url: data-model/cerebelly-data-model.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: Blog
+  url: https://cerebelly.com/blogs/blog
+- type: BlogRSS
+  url: https://cerebelly.com/blogs/news.atom
+- type: GitHubOrganization
+  url: https://github.com/Cerebelly
+- type: Support
+  url: https://cerebelly.com/pages/contact
+- type: SignUp
+  url: https://cerebelly.com/account/login
+- type: TermsOfService
+  url: https://cerebelly.com/policies/terms-of-service
+- type: PrivacyPolicy
+  url: https://cerebelly.com/policies/privacy-policy
+- type: RefundPolicy
+  url: https://cerebelly.com/policies/refund-policy
+- type: ShippingPolicy
+  url: https://cerebelly.com/policies/shipping-policy
+- type: WhereToBuy
+  url: https://cerebelly.com/pages/where-to-buy

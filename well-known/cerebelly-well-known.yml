@@ -1,0 +1,80 @@
+generated: '2026-08-09'
+method: probed
+source: https://cerebelly.com/.well-known/
+name: Cerebelly well-known index
+description: >-
+  Every /.well-known/ path probed against the Cerebelly storefront host on
+  2026-08-09, with the HTTP status it actually returned. Absence is recorded as
+  data. The host is honest about misses — unmatched paths return a real 404 with
+  a 4,264-byte Shopify not-found body, so the 200s below are genuine documents,
+  not an SPA catch-all.
+host: cerebelly.com
+probes:
+- path: /.well-known/openid-configuration
+  status: 200
+  content_type: application/json
+  file: cerebelly-openid-configuration.json
+  note: >-
+    Shopify customer-account OpenID Connect discovery document. Issuer
+    https://shopify.com/authentication/74590912725, endpoints on
+    account.cerebelly.com.
+- path: /.well-known/oauth-authorization-server
+  status: 200
+  content_type: application/json
+  file: cerebelly-oauth-authorization-server.json
+  note: RFC 8414 authorization-server metadata; byte-identical to the OIDC discovery document.
+- path: /.well-known/oauth-protected-resource
+  status: 200
+  content_type: application/json
+  file: cerebelly-oauth-protected-resource.json
+  note: >-
+    RFC 9728 protected-resource metadata. Declares cerebelly.com as the resource
+    and names two authorization servers.
+- path: /.well-known/ucp
+  status: 200
+  content_type: application/json
+  file: cerebelly-ucp.json
+  note: >-
+    Universal Commerce Protocol merchant profile — supported versions, the MCP
+    service endpoint, capability set, and three configured payment handlers
+    (Google Pay, Shopify card, Shop Pay).
+- path: /.well-known/ucp/2026-04-08
+  status: 200
+  note: Version-pinned UCP profile; the version-negotiation target named by /.well-known/ucp.
+- path: /.well-known/security.txt
+  status: 404
+  note: No RFC 9116 security.txt is published on this host.
+- path: /.well-known/api-catalog
+  status: 404
+  note: No RFC 9727 API catalog.
+- path: /.well-known/ai-plugin.json
+  status: 404
+- path: /.well-known/agent-card.json
+  status: 404
+  note: No A2A agent card. Nothing written to a2a/ — see the no-fabrication rule.
+- path: /.well-known/agent.json
+  status: 404
+  note: Legacy pre-0.3 A2A path also misses.
+- path: /.well-known/mcp.json
+  status: 404
+  note: >-
+    No .well-known MCP descriptor; the MCP endpoint is advertised through
+    /.well-known/ucp and /llms.txt instead.
+adjacent:
+- path: /llms.txt
+  status: 200
+  content_type: text/markdown
+  file: ../llms/cerebelly-llms.txt
+- path: /agents.md
+  status: 200
+  content_type: text/markdown
+  file: ../llms/cerebelly-agents.md
+- path: /robots.txt
+  status: 200
+  note: >-
+    Carries a prose agent policy in its comment header pointing at /agents.md,
+    /.well-known/ucp and the UCP/MCP endpoint, and forbidding automated checkout
+    completion without contemporaneous human approval.
+- path: /sitemap_agentic_discovery.xml
+  status: 200
+  note: A dedicated agent-discovery sitemap whose single entry is /agents.md.

@@ -1,0 +1,174 @@
+generated: '2026-08-09'
+method: derived
+source: >-
+  well-known/cerebelly-well-known.yml + mcp/cerebelly-ucp-tools-list.json +
+  graphql/cerebelly-storefront.graphql + https://cerebelly.com/llms.txt
+name: Cerebelly standards conformance
+description: >-
+  Cross-cutting standards asserted against Cerebelly's live surfaces. Each entry
+  records whether the standard is genuinely conformed to and the specific evidence
+  that settles it. `conforms: false` entries are kept because a recorded absence is
+  as useful as a recorded presence — and because Cerebelly makes no compliance
+  claims of its own anywhere on its site, every judgement below is ours from
+  observed behaviour, not a repetition of a vendor claim.
+standards:
+- id: mcp
+  name: Model Context Protocol
+  conforms: true
+  version_observed: JSON-RPC 2.0 transport, streamable HTTP
+  evidence: >-
+    POST tools/list to https://cerebelly.com/api/ucp/mcp returned HTTP 200 with a
+    well-formed jsonrpc/id/result envelope and 13 tools, each with a valid
+    inputSchema. Anonymous, no OAuth challenge.
+- id: ucp
+  name: Universal Commerce Protocol
+  conforms: true
+  version: '2026-04-08'
+  evidence: >-
+    /.well-known/ucp returns a merchant profile declaring supported_versions,
+    the dev.ucp.shopping service over MCP transport, six capabilities, and three
+    payment handlers. Version-pinned profiles resolve (2026-04-08 → HTTP 200).
+  spec: https://ucp.dev/2026-04-08/specification/overview/
+- id: json-schema
+  name: JSON Schema draft 2020-12
+  conforms: true
+  evidence: >-
+    All 13 MCP tool inputSchemas declare
+    $schema: https://json-schema.org/draft/2020-12/schema and use type, properties,
+    required, items, minItems, maxItems, format and additionalProperties correctly.
+- id: graphql
+  name: GraphQL over HTTP
+  conforms: true
+  evidence: >-
+    https://cerebelly.com/api/2026-01/graphql.json answers a full introspection
+    query anonymously with HTTP 200 — 416 named types, 35 root queries, 41
+    mutations. No subscription type.
+- id: graphql-cursor-connections
+  name: GraphQL Cursor Connections Specification (Relay)
+  conforms: true
+  evidence: >-
+    Every list field returns an *Connection with edges/node/cursor and a PageInfo
+    carrying hasNextPage, hasPreviousPage, startCursor and endCursor. Verified in
+    the introspected SDL.
+- id: oidc
+  name: OpenID Connect Core 1.0
+  conforms: true
+  evidence: >-
+    /.well-known/openid-configuration returns a discovery document with issuer,
+    authorization_endpoint, token_endpoint, jwks_uri, RS256 id_token signing, the
+    openid and email scopes, and the standard iss/sub/aud/exp/iat/nonce claims.
+- id: oauth2
+  name: OAuth 2.0
+  conforms: true
+  evidence: >-
+    Authorization code grant with refresh_token and the RFC 7523 jwt-bearer grant;
+    response_type code; client_secret_basic token endpoint auth.
+- id: oauth2-pkce
+  name: 'RFC 7636 — PKCE'
+  conforms: true
+  evidence: code_challenge_methods_supported is ["S256"]. Plain is not offered.
+- id: rfc8414
+  name: 'RFC 8414 — OAuth 2.0 Authorization Server Metadata'
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-authorization-server returns HTTP 200 with the required
+    issuer, authorization_endpoint, token_endpoint and response_types_supported.
+- id: rfc9728
+  name: 'RFC 9728 — OAuth 2.0 Protected Resource Metadata'
+  conforms: true
+  evidence: >-
+    /.well-known/oauth-protected-resource declares resource
+    https://cerebelly.com, two authorization_servers, and
+    bearer_methods_supported ["header"].
+- id: idempotency
+  name: Idempotent write semantics
+  conforms: partial
+  evidence: >-
+    complete_checkout REQUIRES meta.idempotency-key, and the schema enforces it —
+    IDEMPOTENCY_KEY_ALREADY_USED is a published enum member. But it is the only
+    operation of thirteen that has one, the key travels in the body rather than an
+    Idempotency-Key header, and no retention window or replay semantics are
+    published.
+  detail: conventions/cerebelly-conventions.yml
+- id: pagination
+  name: Consistent pagination
+  conforms: partial
+  evidence: >-
+    GraphQL is fully cursor-paginated per the Relay spec. The MCP surface has no
+    pagination at all — lookup_catalog caps ids at 10 and search_catalog exposes no
+    cursor, so an agent cannot walk a large result set. The JSON storefront uses a
+    third scheme (page + limit). Three surfaces, three answers.
+- id: rfc9457
+  name: 'RFC 9457 — Problem Details for HTTP APIs'
+  conforms: false
+  evidence: >-
+    No surface emits application/problem+json. Errors are JSON-RPC error members or
+    GraphQL typed userErrors.
+  detail: errors/cerebelly-problem-types.yml
+- id: rfc9116
+  name: 'RFC 9116 — security.txt'
+  conforms: false
+  evidence: 'https://cerebelly.com/.well-known/security.txt returned HTTP 404.'
+- id: rfc8594
+  name: 'RFC 8594 — Sunset HTTP header'
+  conforms: false
+  evidence: >-
+    No Sunset or Deprecation header observed on any response, and no written
+    deprecation policy is published.
+  detail: lifecycle/cerebelly-lifecycle.yml
+- id: rfc9727
+  name: 'RFC 9727 — API Catalog'
+  conforms: false
+  evidence: 'https://cerebelly.com/.well-known/api-catalog returned HTTP 404.'
+- id: openapi
+  name: OpenAPI
+  conforms: false
+  evidence: >-
+    No OpenAPI is published on any Cerebelly host. /openapi.json, /openapi.yaml,
+    /swagger.json, /v1/openapi.json, /api-docs, /docs and /redoc all returned 404
+    on cerebelly.com; api., developer. and docs.cerebelly.com do not resolve.
+- id: asyncapi
+  name: AsyncAPI
+  conforms: false
+  not_applicable: true
+  evidence: >-
+    Cerebelly publishes no event, streaming or webhook surface of its own. Not a
+    gap — there is nothing to describe.
+- id: a2a
+  name: 'A2A Agent Card'
+  conforms: false
+  evidence: >-
+    Both /.well-known/agent-card.json and the legacy /.well-known/agent.json
+    returned HTTP 404. Nothing was written to a2a/ — an agent card may only ever be
+    recorded when the provider actually serves one.
+- id: llmstxt
+  name: llms.txt
+  conforms: true
+  evidence: >-
+    https://cerebelly.com/llms.txt returns HTTP 200 as text/markdown with 4,354
+    bytes of genuine agent instructions, mirrored at /agents.md and cross-linked
+    from robots.txt and a dedicated sitemap_agentic_discovery.xml.
+compliance_claims:
+  published: false
+  note: >-
+    Cerebelly publishes no trust center, no SOC 2 / ISO 27001 / PCI attestation
+    page, and no security or compliance page on its own domain. trust.cerebelly.com
+    and status.cerebelly.com do not resolve. No Compliance pointer is emitted,
+    because there is nothing published to point at.
+  probed:
+  - url: https://trust.cerebelly.com/
+    status: 000
+  - url: https://cerebelly.com/.well-known/security.txt
+    status: 404
+food_and_consumer_claims:
+  note: >-
+    Cerebelly makes substantive non-API claims — a US patent on its 16-nutrient food
+    composition, USDA organic certification, and the Clean Label Project Purity
+    Award. These are product-safety claims, not API or security compliance, and are
+    recorded here only so they are not mistaken for either.
+coverage:
+  asserted: 20
+  conforms: 12
+  partial: 2
+  does_not_conform: 5
+  not_applicable: 1

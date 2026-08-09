@@ -1,0 +1,67 @@
+generated: '2026-08-09'
+method: generated
+source: mcp/cerebelly-ucp-tools-list.json + graphql/cerebelly-storefront.graphql
+name: Cerebelly Agent Skills
+description: >-
+  Packaged Agent Skills for Cerebelly's live commerce surfaces. Every operation
+  named in these skills was read from a live schema — the 13 tool names from an
+  anonymous MCP tools/list, the field names from anonymous GraphQL introspection.
+  No operation was invented. Cerebelly publishes no skills of its own; it does
+  publish llms.txt and agents.md, both captured verbatim under llms/.
+provider_published_skills: none
+provider_published_agent_docs:
+- llms/cerebelly-llms.txt
+- llms/cerebelly-agents.md
+skills:
+- name: cerebelly-product-discovery
+  file: cerebelly-product-discovery.md
+  api: cerebelly-ucp-commerce-mcp
+  surface: https://cerebelly.com/api/ucp/mcp
+  authentication: none
+  operations: [search_catalog, lookup_catalog, get_product]
+  summary: >-
+    Find products and resolve the product-variant ids a cart requires. Covers the
+    required ucp-agent profile, buyer context for correct pricing, the 10-id batch
+    cap on lookup_catalog, and the absence of pagination on this surface.
+- name: cerebelly-cart-and-checkout
+  file: cerebelly-cart-and-checkout.md
+  api: cerebelly-ucp-commerce-mcp
+  surface: https://cerebelly.com/api/ucp/mcp
+  authentication: none for cart; buyer-approved payment handler for completion
+  operations:
+  - create_cart
+  - get_cart
+  - update_cart
+  - cancel_cart
+  - create_checkout
+  - get_checkout
+  - update_checkout
+  - complete_checkout
+  - cancel_checkout
+  - get_order
+  summary: >-
+    The full purchase path. Leads with Cerebelly's own human-approval rule on
+    payment, then covers cart warnings, the three configured payment handlers, and
+    the required meta.idempotency-key on complete_checkout including correct retry
+    behaviour.
+- name: cerebelly-catalog-sync
+  file: cerebelly-catalog-sync.md
+  api: cerebelly-storefront-graphql
+  surface: https://cerebelly.com/api/2026-01/graphql.json
+  authentication: none
+  operations: [products, collections, product, productByHandle, articles, blogs, pages, localization, shop, publicApiVersions]
+  summary: >-
+    Bulk catalog and content reads with Relay cursor pagination, runtime version
+    discovery, cost-based rate-limit handling, @inContext localization, and the
+    flat /products.json fallback.
+coverage:
+  skills: 3
+  mcp_tools_covered: 13
+  mcp_tools_total: 13
+  graphql_root_fields_covered: 10
+grounding:
+  mcp_tools_verified_against: mcp/cerebelly-ucp-tools-list.json
+  graphql_fields_verified_against: graphql/cerebelly-storefront.graphql
+  policy_quoted_from:
+  - https://cerebelly.com/llms.txt
+  - https://cerebelly.com/robots.txt

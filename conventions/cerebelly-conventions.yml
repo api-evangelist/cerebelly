@@ -1,0 +1,169 @@
+generated: '2026-08-09'
+method: derived
+source: mcp/cerebelly-ucp-tools-list.json + graphql/cerebelly-storefront.graphql + https://cerebelly.com/llms.txt
+name: Cerebelly cross-cutting API conventions
+description: >-
+  Runtime semantics observed across Cerebelly's three live surfaces — the anonymous
+  UCP commerce MCP endpoint, the Storefront GraphQL API, and the read-only JSON
+  storefront endpoints. Every rule below was read out of a live schema or a document
+  Cerebelly's own host serves; none were assumed from platform familiarity.
+authentication:
+  style: mixed
+  summary: >-
+    Anonymous on commerce and catalog surfaces; OIDC authorization-code + PKCE on
+    the customer-account surface; payment delegated to buyer-approved handlers.
+  detail: ../authentication/cerebelly-authentication.yml
+idempotency:
+  supported: true
+  scope: checkout completion only
+  mechanism: request-body metadata field
+  field: meta.idempotency-key
+  location: JSON request body, under the tool's `meta` object
+  required: true
+  operations:
+  - complete_checkout
+  graphql_equivalent: cartSubmitForCompletion(attemptToken:)
+  retention: not published
+  description: >-
+    complete_checkout is the single mutating operation on the whole surface that
+    declares an idempotency key, and it declares it as REQUIRED — the tool's
+    inputSchema lists both `ucp-agent` and `idempotency-key` under
+    meta.required. Every other tool, including create_cart, create_checkout and
+    update_checkout, omits it entirely. The design intent is narrow and legible:
+    protect the one call that moves money, and let the rest be safely retried
+    because they are either reads or last-write-wins updates against a cart id.
+  evidence:
+    source: mcp/cerebelly-ucp-tools-list.json
+    json_pointer: /result/tools/3/inputSchema/properties/meta/properties/idempotency-key
+    published_description: An idempotency key for completing the checkout.
+    http_status: 200
+    url: https://cerebelly.com/api/ucp/mcp
+  caveats:
+  - No retention window, collision policy, or replay-response semantics are published.
+  - >-
+    The key is carried in the body rather than in an Idempotency-Key header, so it
+    is invisible to HTTP-layer proxies and gateways.
+pagination:
+  mcp:
+    style: none-documented
+    detail: >-
+      No UCP tool exposes a cursor, page or offset parameter. lookup_catalog bounds
+      its batch with minItems 1 / maxItems 10 on catalog.ids, which is a batch cap
+      rather than pagination.
+  graphql:
+    style: cursor
+    spec: GraphQL Cursor Connections Specification
+    params: [first, last, after, before]
+    response_fields: [edges, node, cursor, pageInfo, hasNextPage, hasPreviousPage, startCursor, endCursor]
+    detail: >-
+      Every list field on the Storefront schema returns a Relay-style connection.
+      Verified against the introspected SDL.
+  json_storefront:
+    style: page-and-limit
+    params: [page, limit]
+    detail: >-
+      /products.json and /collections/{handle}/products.json accept page and limit
+      query parameters and return a bare {"products": [...]} envelope with no
+      total-count or link header.
+filtering_and_context:
+  buyer_context:
+    location: catalog.context on every catalog tool; cart.context on cart tools
+    fields: [address_country, address_region, postal_code, language, currency, intent]
+    formats:
+      address_country: ISO 3166-1 alpha-2
+      language: IETF BCP 47
+      currency: ISO 4217
+    note: >-
+      llms.txt explicitly instructs agents to pass context.address_country and
+      context.currency for accurate pricing and availability.
+  platform_signals:
+    location: catalog.signals
+    fields: ['dev.ucp.buyer_ip', 'dev.ucp.user_agent']
+    note: Namespaced under dev.ucp; additionalProperties is true, so the set is open.
+  graphql_context:
+    directive: '@inContext'
+    note: The GraphQL equivalent of buyer context is a directive, not an argument.
+agent_identity:
+  required: true
+  field: meta.ucp-agent.profile
+  format: uri
+  applies_to: all 13 MCP tools
+  description: >-
+    Every single tool requires meta.ucp-agent.profile, a URI identifying the calling
+    agent's UCP profile. This is the one universal required field on the surface —
+    an agent cannot call even search_catalog without declaring who it is.
+identifiers:
+  format: Shopify Global ID (GID)
+  pattern: 'gid://shopify/{Type}/{numeric_id}'
+  examples_published:
+  - 'gid://shopify/Checkout/abc123'
+  - 'gid://shopify/Order/123'
+  note: >-
+    Published verbatim in the get_order and get_checkout tool descriptions. The
+    JSON storefront endpoints use bare numeric ids instead, so ids are not portable
+    between the MCP/GraphQL surfaces and /products.json.
+versioning:
+  style: date-based
+  detail: ../lifecycle/cerebelly-lifecycle.yml
+  mcp: >-
+    UCP protocol version negotiated through /.well-known/ucp; 2026-04-08 current,
+    2026-01-23 also supported.
+  graphql: >-
+    Version is a path segment — /api/{YYYY-MM}/graphql.json. The supported set is
+    discoverable at runtime through the publicApiVersions query.
+error_envelope:
+  mcp:
+    style: JSON-RPC 2.0
+    detail: Errors returned as the JSON-RPC `error` member; not RFC 9457.
+  graphql:
+    style: dual
+    detail: >-
+      Transport errors in the top-level `errors` array; domain errors in typed
+      userErrors payload fields implementing the DisplayableError interface, each
+      with field[] + message + a typed code enum.
+    catalog: ../errors/cerebelly-problem-types.yml
+  rfc9457: false
+rate_limiting:
+  mcp:
+    published: true
+    basis: per IP
+    signal: HTTP 429
+    guidance: 'llms.txt: "The MCP endpoint is rate-limited per IP. Back off on 429 responses."'
+    headers: not published
+  graphql:
+    published: true
+    basis: query cost
+    signal: >-
+      Every response carries extensions.cost with requestedQueryCost. Observed on
+      live responses (requestedQueryCost 1 and 3).
+    headers: none
+tracing:
+  request_id: not published
+  note: No request-id or correlation header is documented or observed on any surface.
+metadata_and_extensibility:
+  graphql: Metafields and metaobjects are first-class; cartMetafieldsSet / cartMetafieldDelete are published mutations.
+  mcp: >-
+    Most UCP objects set additionalProperties true (payment, billing_address,
+    buyer, context, signals), so the schema is deliberately open to extension.
+agent_policy:
+  human_approval_required: true
+  scope: checkout completion, payment, order placement
+  stated_in:
+  - https://cerebelly.com/llms.txt
+  - https://cerebelly.com/agents.md
+  - https://cerebelly.com/robots.txt
+  quote: >-
+    "Checkouts are for humans. Do NOT complete checkout, payment, or order placement
+    automatically — no scripted form fills, browser automation, or end-to-end agent
+    flows that finalize payment without an explicit, contemporaneous human approval
+    step."
+  note: >-
+    The same rule is stated in all three documents, including robots.txt, which is
+    unusual — it puts the agent policy where a crawler will actually read it.
+cross_references:
+  authentication: ../authentication/cerebelly-authentication.yml
+  scopes: ../scopes/cerebelly-scopes.yml
+  errors: ../errors/cerebelly-problem-types.yml
+  lifecycle: ../lifecycle/cerebelly-lifecycle.yml
+  conformance: ../conformance/cerebelly-conformance.yml
+  data_model: ../data-model/cerebelly-data-model.yml

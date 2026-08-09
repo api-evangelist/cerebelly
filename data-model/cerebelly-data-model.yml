@@ -1,0 +1,253 @@
+generated: '2026-08-09'
+method: derived
+source: graphql/cerebelly-storefront.graphql + mcp/cerebelly-ucp-tools-list.json
+name: Cerebelly commerce data model
+description: >-
+  The entity-relationship graph behind Cerebelly's storefront, derived from the live
+  Storefront GraphQL type graph (416 types introspected anonymously) and the UCP MCP
+  tool input schemas. Relationships were read from real field types and id-reference
+  fields; nothing was assumed. Only the entities an unauthenticated caller can
+  actually reach or reason about are listed — the customer subgraph is included
+  because it is in the published schema, with its gating noted.
+identifiers:
+  primary_format: Shopify Global ID
+  pattern: 'gid://shopify/{Type}/{numeric_id}'
+  examples_published:
+  - 'gid://shopify/Checkout/abc123'
+  - 'gid://shopify/Order/123'
+  secondary_format: handle
+  handle_note: >-
+    Most content entities carry a URL-safe `handle` alongside the GID, and the
+    schema exposes a *ByHandle root query for each (productByHandle,
+    collectionByHandle, blogByHandle, pageByHandle). Handles are the human-facing
+    key; GIDs are the machine key.
+  json_storefront_note: >-
+    /products.json returns bare numeric ids, not GIDs, so ids are not portable
+    between that surface and the GraphQL/MCP surfaces.
+entities:
+- name: Shop
+  root_query: shop
+  description: The store itself — name, description, policies, payment settings, brand.
+  relationships:
+  - has_one: ShopPolicy
+    via: privacyPolicy / termsOfService / refundPolicy / shippingPolicy
+  - has_one: Brand
+    via: brand
+  - has_one: PaymentSettings
+    via: paymentSettings
+- name: Product
+  root_query: [product, productByHandle, products]
+  mcp_tools: [get_product, lookup_catalog, search_catalog]
+  description: A sellable item. The central entity of the catalog.
+  key_fields: [id, handle, title, descriptionHtml, productType, vendor, tags, availableForSale, priceRange]
+  relationships:
+  - has_many: ProductVariant
+    via: variants
+  - has_many: Image
+    via: images
+  - has_many: ProductOption
+    via: options
+  - has_many: Collection
+    via: collections
+    cardinality: many_to_many
+  - has_many: Metafield
+    via: metafields
+  - has_many: SellingPlanGroup
+    via: sellingPlanGroups
+  - has_many: Product
+    via: productRecommendations
+    note: Self-referential recommendation edge.
+- name: ProductVariant
+  description: >-
+    The actually purchasable unit and the pivot of the whole model — cart line items
+    key on a variant id, never on a product id.
+  key_fields: [id, sku, title, price, compareAtPrice, availableForSale, quantityAvailable, selectedOptions]
+  relationships:
+  - belongs_to: Product
+    via: product
+  - has_one: Image
+    via: image
+  - has_one: UnitPrice
+    via: unitPrice
+  - has_many: SellingPlanAllocation
+    via: sellingPlanAllocations
+- name: Collection
+  root_query: [collection, collectionByHandle, collections]
+  description: A merchandised grouping of products.
+  key_fields: [id, handle, title, descriptionHtml]
+  relationships:
+  - has_many: Product
+    via: products
+    cardinality: many_to_many
+  - has_one: Image
+    via: image
+- name: Cart
+  root_query: cart
+  mcp_tools: [get_cart, create_cart, update_cart, cancel_cart]
+  description: >-
+    The pre-purchase container. In the 2026-01 Storefront schema the Cart has fully
+    absorbed the retired Checkout type — it now carries delivery, discount and
+    payment state directly.
+  key_fields: [id, checkoutUrl, totalQuantity, cost, note, attributes]
+  relationships:
+  - has_many: CartLine
+    via: lines
+  - has_one: CartBuyerIdentity
+    via: buyerIdentity
+  - has_many: CartDeliveryGroup
+    via: deliveryGroups
+  - has_many: CartDiscountCode
+    via: discountCodes
+  - has_many: CartDiscountAllocation
+    via: discountAllocations
+  - has_many: AppliedGiftCard
+    via: appliedGiftCards
+  - has_one: CartCost
+    via: cost
+  - has_many: Metafield
+    via: metafields
+- name: CartLine
+  description: One variant plus a quantity within a cart. Also modelled as ComponentizableCartLine for bundles.
+  relationships:
+  - belongs_to: Cart
+  - has_one: ProductVariant
+    via: merchandise
+    note: >-
+      The merchandise field is a Merchandise union whose only current member is
+      ProductVariant. This is the join that binds the catalog subgraph to the cart
+      subgraph.
+  - has_one: CartLineCost
+    via: cost
+  - has_one: SellingPlanAllocation
+    via: sellingPlanAllocation
+- name: CartDeliveryGroup
+  description: Shipping options resolved for a subset of cart lines against a destination.
+  relationships:
+  - belongs_to: Cart
+  - has_many: CartDeliveryOption
+    via: deliveryOptions
+  - has_one: CartDeliveryOption
+    via: selectedDeliveryOption
+  - has_many: CartLine
+    via: cartLines
+- name: Checkout
+  description: >-
+    A UCP-only entity. There is NO Checkout type in the Storefront GraphQL schema —
+    it exists solely on the MCP surface, where create_checkout / get_checkout /
+    update_checkout / complete_checkout / cancel_checkout operate on
+    gid://shopify/Checkout/{id}. GraphQL models the same flow as
+    cartPrepareForCompletion → cartSubmitForCompletion → cartCompletionAttempt.
+  surface: mcp-only
+  mcp_tools: [get_checkout, create_checkout, update_checkout, complete_checkout, cancel_checkout]
+  relationships:
+  - derived_from: Cart
+    via: line_items
+  - has_many: PaymentInstrument
+    via: payment.instruments
+  - has_one: Address
+    via: fulfillment / billing_address
+- name: PaymentInstrument
+  surface: mcp-only
+  description: A buyer-approved payment token produced by a UCP payment handler.
+  key_fields: [id, handler_id, type, billing_address]
+  relationships:
+  - belongs_to: Checkout
+  - references: PaymentHandler
+    via: handler_id
+    note: One of gpay, shopify.card, shop_pay — declared in /.well-known/ucp.
+- name: Order
+  root_query: null
+  mcp_tools: [get_order]
+  description: >-
+    A completed purchase. The type exists in the Storefront schema but has no
+    anonymous root query — it is reachable only through Customer.orders behind a
+    customer access token, or through the Customer Account API (HTTP 401 anonymously).
+  access: gated
+  relationships:
+  - belongs_to: Customer
+    via: customer.orders
+  - has_many: OrderLineItem
+    via: lineItems
+  - has_one: MailingAddress
+    via: shippingAddress / billingAddress
+  - has_many: Fulfillment
+    via: successfulFulfillments
+- name: Customer
+  root_query: customer
+  access: gated
+  description: >-
+    Requires a customer access token. Minted by customerAccessTokenCreate on the
+    Storefront API, or through the OIDC flow at account.cerebelly.com.
+  relationships:
+  - has_many: MailingAddress
+    via: addresses
+  - has_one: MailingAddress
+    via: defaultAddress
+  - has_many: Order
+    via: orders
+- name: Article
+  root_query: [article, articles]
+  description: A blog post. Cerebelly publishes editorial content at /blogs/blog.
+  relationships:
+  - belongs_to: Blog
+    via: blog
+  - has_one: Image
+    via: image
+  - has_many: Comment
+    via: comments
+- name: Blog
+  root_query: [blog, blogByHandle, blogs]
+  relationships:
+  - has_many: Article
+    via: articles
+- name: Page
+  root_query: [page, pageByHandle, pages]
+  description: Static content pages — our-story, where-to-buy, contact.
+- name: Metaobject
+  root_query: [metaobject, metaobjects]
+  description: Custom structured content types defined by the merchant.
+  relationships:
+  - has_many: MetaobjectField
+    via: fields
+- name: Menu
+  root_query: menu
+  description: Storefront navigation.
+  relationships:
+  - has_many: MenuItem
+    via: items
+    note: Self-nesting — MenuItem has its own items.
+- name: Localization
+  root_query: localization
+  description: Available countries, languages and currencies for @inContext resolution.
+  relationships:
+  - has_many: Country
+    via: availableCountries
+  - has_many: Language
+    via: availableLanguages
+core_flow:
+  description: The purchase path, as an entity walk.
+  steps:
+  - 'search_catalog / products → Product'
+  - 'get_product → ProductVariant (the purchasable id)'
+  - 'create_cart(line_items[].item.id = ProductVariant.id) → Cart'
+  - 'update_cart / update_checkout → CartDeliveryGroup, discount codes'
+  - 'create_checkout → Checkout (MCP-only entity)'
+  - 'update_checkout → PaymentInstrument from a UCP payment handler'
+  - 'complete_checkout(meta.idempotency-key) → Order'
+  - 'get_order → Order (gated on customer identity)'
+observations:
+- >-
+  ProductVariant, not Product, is the join key for every commerce operation. An
+  agent that adds a Product id to a cart will fail.
+- >-
+  The model has a seam: Checkout exists only on the MCP surface and Order is only
+  readable on the gated surface, so no single surface can carry a buyer from search
+  through to order history.
+- >-
+  Three id conventions coexist across three surfaces — GIDs on GraphQL/MCP, bare
+  numeric ids on /products.json, and handles in URLs.
+counts:
+  graphql_types_introspected: 416
+  entities_modelled: 18
+  mcp_only_entities: 2
+  gated_entities: 2

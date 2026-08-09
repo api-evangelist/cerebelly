@@ -1,0 +1,66 @@
+generated: '2026-08-09'
+method: searched
+source: https://cerebelly.com/.well-known/openid-configuration
+name: Cerebelly OAuth scopes
+description: >-
+  The complete scopes_supported list published by Cerebelly's own OpenID Connect
+  discovery document. Four scopes, no more — this is the whole authorization
+  vocabulary the domain exposes. Cerebelly publishes no OpenAPI, so this was read
+  directly from the live metadata document rather than derived from a spec.
+authorization_server: https://shopify.com/authentication/74590912725
+authorization_endpoint: https://account.cerebelly.com/authentication/oauth/authorize
+token_endpoint: https://account.cerebelly.com/authentication/oauth/token
+flow: authorization_code
+pkce: S256
+granularity: coarse
+scopes:
+- name: openid
+  description: >-
+    Standard OpenID Connect scope. Requests an ID token identifying the customer;
+    issues the sub, iss, aud, exp, iat, nonce and sid claims.
+  standard: true
+  spec: https://openid.net/specs/openid-connect-core-1_0.html
+- name: email
+  description: >-
+    Standard OpenID Connect scope. Adds the email and email_verified claims to the
+    ID token.
+  standard: true
+  spec: https://openid.net/specs/openid-connect-core-1_0.html
+- name: 'customer-account-api:full'
+  description: >-
+    Full read and write access to the authenticated customer's account through the
+    Customer Account GraphQL API at account.cerebelly.com — profile, addresses,
+    orders, subscriptions and payment methods.
+  standard: false
+  granularity: all-or-nothing
+  note: >-
+    There is no read-only variant and no per-resource split. A customer consenting
+    to this scope consents to the entire account surface at once.
+- name: 'customer-account-mcp-api:full'
+  description: >-
+    Full access to the customer-account MCP API — the authenticated, per-customer
+    counterpart to the anonymous UCP commerce MCP endpoint on the storefront host.
+  standard: false
+  granularity: all-or-nothing
+  note: >-
+    Notable as a first-class agent scope: the authorization server treats MCP as a
+    distinct protected surface with its own consent grant, rather than folding it
+    into the general account scope.
+coverage:
+  total: 4
+  standard: 2
+  provider_specific: 2
+  read_only_variants: 0
+observations:
+- >-
+  Both provider-specific scopes end in ":full". Neither offers least-privilege
+  narrowing, so an agent that needs only order history must ask for write access to
+  the entire account.
+- >-
+  No scope governs the anonymous commerce surfaces. search_catalog, create_cart and
+  the Storefront GraphQL catalog fields require no grant at all.
+x-evidence:
+  fetched: '2026-08-09'
+  url: https://cerebelly.com/.well-known/openid-configuration
+  http_status: 200
+  content_type: application/json; charset=utf-8

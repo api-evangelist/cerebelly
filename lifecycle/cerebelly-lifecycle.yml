@@ -1,0 +1,94 @@
+generated: '2026-08-09'
+method: searched
+source: https://cerebelly.com/api/2026-01/graphql.json (publicApiVersions query, HTTP 200)
+name: Cerebelly API lifecycle and versioning
+description: >-
+  Versioning and deprecation posture across Cerebelly's live surfaces. The GraphQL
+  version list below was not inferred — it was queried from Cerebelly's own endpoint
+  with the publicApiVersions root query, which makes the supported set discoverable
+  at runtime rather than only in prose. The UCP version set comes from the merchant
+  profile at /.well-known/ucp.
+versioning:
+  graphql:
+    style: date-based path segment
+    pattern: 'https://cerebelly.com/api/{YYYY-MM}/graphql.json'
+    discovery_query: '{ publicApiVersions { handle displayName supported } }'
+    cadence: quarterly
+    versions:
+    - handle: '2025-10'
+      supported: true
+    - handle: '2026-01'
+      supported: true
+    - handle: '2026-04'
+      supported: true
+    - handle: '2026-07'
+      supported: true
+      latest: true
+    - handle: '2026-10'
+      supported: false
+      status: release candidate
+    - handle: unstable
+      supported: false
+      status: unstable
+    supported_count: 4
+    note: >-
+      Four stable versions supported concurrently, one release candidate published
+      ahead of its stable date, and an unstable channel. A caller can see the whole
+      support window from inside the API.
+  ucp:
+    style: date-based protocol version
+    current: '2026-04-08'
+    supported:
+    - '2026-04-08'
+    - '2026-01-23'
+    negotiation: >-
+      /.well-known/ucp publishes supported_versions as a map of version to a
+      version-pinned profile URL, so an agent negotiates before calling.
+    source: https://cerebelly.com/.well-known/ucp
+  json_storefront:
+    style: unversioned
+    note: /products.json and /collections/{handle}/products.json carry no version segment.
+deprecation:
+  policy_published: false
+  mechanism: in-schema
+  detail: >-
+    Deprecation is expressed structurally rather than as a written policy —
+    GraphQL fields and enum values carry isDeprecated plus a deprecationReason,
+    surfaced through introspection and captured in the SDL. There is no prose
+    deprecation policy, no published sunset window, and no Sunset or Deprecation
+    HTTP header (RFC 8594) observed on any response.
+  rfc8594_headers: false
+  sunset_header_observed: false
+  note: >-
+    The version list is self-documenting, but nothing tells a caller how long a
+    supported version stays supported. That is the gap on this surface.
+changelog:
+  published_by_cerebelly: false
+  note: >-
+    Cerebelly publishes no API changelog of its own. The underlying platform's
+    release notes are not a Cerebelly artifact and are deliberately not claimed
+    here.
+status_page:
+  published_by_cerebelly: false
+  probed:
+  - url: https://status.cerebelly.com/
+    status: 000
+    note: Host does not resolve.
+  note: >-
+    No status page on the cerebelly.com domain. Nothing is wired as a StatusPage
+    pointer, because none exists on a host Cerebelly controls.
+sla:
+  published: false
+support:
+  contact: https://cerebelly.com/pages/contact
+  note: Consumer support only — there is no developer support channel.
+x-evidence:
+  fetched: '2026-08-09'
+  urls:
+  - url: https://cerebelly.com/api/2026-01/graphql.json
+    http_status: 200
+    note: publicApiVersions query returned six version handles.
+  - url: https://cerebelly.com/.well-known/ucp
+    http_status: 200
+  - url: https://status.cerebelly.com/
+    http_status: 000
