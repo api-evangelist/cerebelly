@@ -3,21 +3,18 @@ method: searched
 source: https://cerebelly.com/api/ucp/mcp
 name: Cerebelly UCP Commerce MCP
 status: live
-description: >-
-  A live, anonymously reachable Model Context Protocol endpoint on Cerebelly's own
-  storefront host. An unauthenticated POST of {"jsonrpc":"2.0","id":1,"method":"tools/list"}
-  returns HTTP 200 with 13 tools, each carrying a complete JSON Schema draft 2020-12
-  inputSchema. This is Shopify's Universal Commerce Protocol implementation as deployed
-  on cerebelly.com — Cerebelly does not author it, but it is served from Cerebelly's
-  host under Cerebelly's domain and it transacts against Cerebelly's catalog.
+description: A live, anonymously reachable Model Context Protocol endpoint on Cerebelly's own storefront
+  host. An unauthenticated POST of {"jsonrpc":"2.0","id":1,"method":"tools/list"} returns HTTP 200 with
+  13 tools, each carrying a complete JSON Schema draft 2020-12 inputSchema. This is Shopify's Universal
+  Commerce Protocol implementation as deployed on cerebelly.com — Cerebelly does not author it, but it
+  is served from Cerebelly's host under Cerebelly's domain and it transacts against Cerebelly's catalog.
 endpoint: https://cerebelly.com/api/ucp/mcp
 transport: streamable-http
 protocol: mcp
-authentication: >-
-  None required for tools/list or for catalog and cart tools. Checkout completion
-  requires a buyer-approved payment instrument produced by one of the configured
-  payment handlers; Cerebelly's own llms.txt and robots.txt both state that agents
-  must not finalize payment without contemporaneous human approval.
+authentication: None required for tools/list or for catalog and cart tools. Checkout completion requires
+  a buyer-approved payment instrument produced by one of the configured payment handlers; Cerebelly's
+  own llms.txt and robots.txt both state that agents must not finalize payment without contemporaneous
+  human approval.
 discovery:
 - https://cerebelly.com/.well-known/ucp
 - https://cerebelly.com/llms.txt
@@ -42,9 +39,8 @@ ucp:
   - id: gpay
     family: com.google.pay
     version: '2026-01-11'
-    note: >-
-      Google Pay, merchant_name "Cerebelly", tokenization gateway "shopify".
-      Card networks VISA, MASTERCARD, AMEX, DISCOVER.
+    note: Google Pay, merchant_name "Cerebelly", tokenization gateway "shopify". Card networks VISA, MASTERCARD,
+      AMEX, DISCOVER.
   - id: shopify.card
     family: dev.shopify.card
     version: '2026-01-15'
@@ -56,59 +52,87 @@ tools:
 - name: search_catalog
   category: catalog
   description: Search for products from the online store, hosted on Shopify.
-  required: [meta, catalog]
+  required:
+  - meta
+  - catalog
 - name: lookup_catalog
   category: catalog
   description: Look up multiple products or variants by identifier. Accepts 1–10 ids.
-  required: [meta, catalog]
+  required:
+  - meta
+  - catalog
 - name: get_product
   category: catalog
   description: Retrieve complete product detail by identifier, optionally for selected variant options.
-  required: [meta, catalog]
+  required:
+  - meta
+  - catalog
 - name: get_cart
   category: cart
   description: Get the cart contents.
-  required: [meta, id]
+  required:
+  - meta
+  - id
 - name: create_cart
   category: cart
   description: Creates a new cart from line items keyed on product-variant id.
-  required: [meta, cart]
+  required:
+  - meta
+  - cart
 - name: update_cart
   category: cart
   description: Perform updates to a cart.
-  required: [meta, id, cart]
+  required:
+  - meta
+  - id
+  - cart
 - name: cancel_cart
   category: cart
   description: Cancels a cart.
-  required: [meta, id]
+  required:
+  - meta
+  - id
 - name: get_checkout
   category: checkout
   description: Returns checkout detail including line items, totals, discounts and taxes.
-  required: [meta, id]
+  required:
+  - meta
+  - id
 - name: create_checkout
   category: checkout
   description: Creates a checkout and returns its line items, totals, discounts and taxes.
-  required: [meta, checkout]
+  required:
+  - meta
+  - checkout
 - name: update_checkout
   category: checkout
   description: Updates a checkout — shipping address, delivery method, discounts, payment instruments.
-  required: [meta, id, checkout]
+  required:
+  - meta
+  - id
+  - checkout
 - name: complete_checkout
   category: checkout
-  description: >-
-    Completes a checkout and returns the result. The ONLY tool that requires
-    meta.idempotency-key, and the only one gated on explicit buyer approval.
-  required: [meta, id, checkout]
+  description: Completes a checkout and returns the result. The ONLY tool that requires meta.idempotency-key,
+    and the only one gated on explicit buyer approval.
+  required:
+  - meta
+  - id
+  - checkout
   idempotent: true
   idempotency_key: meta.idempotency-key
 - name: cancel_checkout
   category: checkout
   description: Cancels a checkout.
-  required: [meta, id]
+  required:
+  - meta
+  - id
 - name: get_order
   category: order
   description: Get the details of an order by gid://shopify/Order/{id}.
-  required: [meta, id]
+  required:
+  - meta
+  - id
 schemas: ../json-schema/cerebelly-ucp-tool-schemas.json
 crosswalk: cerebelly-tool-crosswalk.yml
 x-evidence:
@@ -121,3 +145,9 @@ x-evidence:
   response_bytes: 42650
   tool_count: 13
   authenticated: false
+deployment:
+  mode: remote
+  verified: searched
+  tools: 13
+  checked: '2026-08-12'
+  source: catalog MCP census
