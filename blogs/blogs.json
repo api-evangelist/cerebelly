@@ -2,6 +2,13 @@
   "repo": "cerebelly",
   "feeds": [
     {
+      "source": "https://cerebelly.com/blogs/blog.atom",
+      "feed_url": "https://cerebelly.com/blogs/blog.atom",
+      "title": "",
+      "saved": 0,
+      "method": "feed"
+    },
+    {
       "source": "https://cerebelly.com/blogs/blog",
       "feed_url": "https://cerebelly.com/blogs/blog.atom",
       "title": "",
@@ -9,6 +16,6 @@
       "method": "discovered"
     }
   ],
-  "post_count": 0,
-  "fetched": "2026-08-15T12:22:01Z"
+  "post_count": 30,
+  "fetched": "2026-08-22T20:20:02Z"
 }
