@@ -11,6 +11,17 @@ description: 'Cerebelly is an organic baby and toddler food company founded by a
   agents.md pair that tells AI shopping agents how to transact. Cerebelly ships no
   developer program of its own — every machine-readable surface here is the Shopify
   commerce platform as deployed on Cerebelly''s own hosts.'
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 image: https://cdn.shopify.com/s/files/1/0745/9091/2725/files/Cerebelly_Pantry_01_6a49ec81-265a-437a-ba3d-b5b94590be47.png?v=1759935945
 url: https://raw.githubusercontent.com/api-evangelist/cerebelly/refs/heads/main/apis.yml
 x-type: company
