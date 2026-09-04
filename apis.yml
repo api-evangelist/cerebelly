@@ -22,6 +22,21 @@ deliveryModel:
   - pricing
   generated: '2026-08-28'
   method: derived
+accessModel:
+  pricing: unknown
+  onboarding: unknown
+  trial: false
+  try_now: false
+  public: false
+  label: Unknown
+  confidence: low
+  probe_state: covered
+  source:
+  - authentication
+  - scopes
+  - security
+  generated: '2026-09-03'
+  method: derived
 image: https://cdn.shopify.com/s/files/1/0745/9091/2725/files/Cerebelly_Pantry_01_6a49ec81-265a-437a-ba3d-b5b94590be47.png?v=1759935945
 url: https://raw.githubusercontent.com/api-evangelist/cerebelly/refs/heads/main/apis.yml
 x-type: company
