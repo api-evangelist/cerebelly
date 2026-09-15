@@ -1,16 +1,14 @@
 aid: cerebelly
 name: Cerebelly
-description: 'Cerebelly is an organic baby and toddler food company founded by a practicing
-  neurosurgeon with a PhD in developmental neurobiology from Stanford, making veggie-first
-  purees, bone-broth protein purees, dairy-free smoothie pouches, Smart Bars and Clever
-  Bars formulated around 16 brain-supporting nutrients. Its direct-to-consumer storefront
-  at cerebelly.com runs on Shopify, and that storefront is its API surface: an anonymous
-  Universal Commerce Protocol (UCP) MCP endpoint exposing 13 catalog, cart and checkout
-  tools, a public Shopify Storefront GraphQL API answering unauthenticated introspection,
-  an OpenID Connect customer-account authorization server, and a published llms.txt /
-  agents.md pair that tells AI shopping agents how to transact. Cerebelly ships no
-  developer program of its own — every machine-readable surface here is the Shopify
-  commerce platform as deployed on Cerebelly''s own hosts.'
+description: 'Cerebelly is an organic baby and toddler food company founded by a practicing neurosurgeon
+  with a PhD in developmental neurobiology from Stanford, making veggie-first purees, bone-broth protein
+  purees, dairy-free smoothie pouches, Smart Bars and Clever Bars formulated around 16 brain-supporting
+  nutrients. Its direct-to-consumer storefront at cerebelly.com runs on Shopify, and that storefront is
+  its API surface: an anonymous Universal Commerce Protocol (UCP) MCP endpoint exposing 13 catalog, cart
+  and checkout tools, a public Shopify Storefront GraphQL API answering unauthenticated introspection,
+  an OpenID Connect customer-account authorization server, and a published llms.txt / agents.md pair that
+  tells AI shopping agents how to transact. Cerebelly ships no developer program of its own — every machine-readable
+  surface here is the Shopify commerce platform as deployed on Cerebelly''s own hosts.'
 deliveryModel:
   model: saas
   open_source: false
@@ -81,13 +79,11 @@ x-enrichment:
 x-coverage:
   state: covered
   reason: agent-commerce-surface-live
-  detail: >-
-    A consumer baby-food brand with no developer program still turned out to have
-    three live, anonymously readable machine surfaces on its own host — an MCP
-    endpoint returning 13 UCP commerce tools with full JSON Schemas, a Storefront
-    GraphQL API answering unauthenticated introspection with 416 types, and an
-    llms.txt/agents.md pair carrying a real agent policy. No OpenAPI and no A2A
-    agent card exist anywhere on the domain.
+  detail: A consumer baby-food brand with no developer program still turned out to have three live, anonymously
+    readable machine surfaces on its own host — an MCP endpoint returning 13 UCP commerce tools with full
+    JSON Schemas, a Storefront GraphQL API answering unauthenticated introspection with 416 types, and
+    an llms.txt/agents.md pair carrying a real agent policy. No OpenAPI and no A2A agent card exist anywhere
+    on the domain.
   evidence:
   - url: https://cerebelly.com/api/ucp/mcp
     status: 200
@@ -103,14 +99,13 @@ x-coverage:
     status: 404
   checked: '2026-08-09'
 apis:
-- aid: cerebelly-ucp-commerce-mcp
+- aid: cerebelly:cerebelly-ucp-commerce-mcp
   name: Cerebelly UCP Commerce MCP
-  description: 'Cerebelly''s Universal Commerce Protocol (UCP) MCP endpoint, served
-    anonymously from the storefront host. A tools/list call returns 13 tools with full
-    JSON Schema draft 2020-12 input schemas covering catalog search and lookup, product
-    detail, cart lifecycle, and the full checkout lifecycle through buyer-approved
-    completion. Checkout completion carries an idempotency-key. This is the Shopify
-    UCP implementation as deployed on cerebelly.com.'
+  description: Cerebelly's Universal Commerce Protocol (UCP) MCP endpoint, served anonymously from the
+    storefront host. A tools/list call returns 13 tools with full JSON Schema draft 2020-12 input schemas
+    covering catalog search and lookup, product detail, cart lifecycle, and the full checkout lifecycle
+    through buyer-approved completion. Checkout completion carries an idempotency-key. This is the Shopify
+    UCP implementation as deployed on cerebelly.com.
   humanURL: https://cerebelly.com/llms.txt
   baseURL: https://cerebelly.com/api/ucp/mcp
   tags:
@@ -128,13 +123,12 @@ apis:
     url: json-schema/cerebelly-ucp-tool-schemas.json
   - type: Documentation
     url: https://cerebelly.com/agents.md
-- aid: cerebelly-storefront-graphql
+- aid: cerebelly:cerebelly-storefront-graphql
   name: Cerebelly Storefront GraphQL API
-  description: 'The Shopify Storefront GraphQL API as served from cerebelly.com. Answers
-    unauthenticated introspection: 416 types, 35 root queries and 41 mutations covering
-    products, collections, blog articles, pages, menus, metaobjects, predictive search,
-    localization, cart lifecycle and Shop Pay. Date-based API versioning (2025-10 through
-    2026-07 supported) is discoverable through the publicApiVersions query.'
+  description: 'The Shopify Storefront GraphQL API as served from cerebelly.com. Answers unauthenticated
+    introspection: 416 types, 35 root queries and 41 mutations covering products, collections, blog articles,
+    pages, menus, metaobjects, predictive search, localization, cart lifecycle and Shop Pay. Date-based
+    API versioning (2025-10 through 2026-07 supported) is discoverable through the publicApiVersions query.'
   humanURL: https://cerebelly.com/agents.md
   baseURL: https://cerebelly.com/api/2026-01/graphql.json
   tags:
