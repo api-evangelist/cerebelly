@@ -123,6 +123,9 @@ apis:
     url: json-schema/cerebelly-ucp-tool-schemas.json
   - type: Documentation
     url: https://cerebelly.com/agents.md
+  x-surface: platform-generated
+  x-platform: shopify
+  x-platform-surface: ucp
 - aid: cerebelly:cerebelly-storefront-graphql
   name: Cerebelly Storefront GraphQL API
   description: 'The Shopify Storefront GraphQL API as served from cerebelly.com. Answers unauthenticated
@@ -146,6 +149,9 @@ apis:
     url: graphql/cerebelly-storefront.graphql
   - type: Lifecycle
     url: lifecycle/cerebelly-lifecycle.yml
+  x-surface: platform-generated
+  x-platform: shopify
+  x-platform-surface: storefront-graphql
 common:
 - type: DomainSecurity
   url: security/cerebelly-domain-security.yml
