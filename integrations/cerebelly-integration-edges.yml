@@ -1,0 +1,16 @@
+generated: '2026-10-12'
+method: none
+source:
+- https://zapier.com/apps/cerebelly/integrations
+- https://n8n.io/integrations/cerebelly/
+- https://composio.dev/toolkits/cerebelly
+- https://monid.ai/tools/cerebelly
+checked:
+- https://composio.dev/toolkits/cerebelly
+- https://monid.ai/tools/cerebelly
+- https://n8n.io/integrations/cerebelly/
+- https://zapier.com/apps/cerebelly/integrations
+summary: null
+marketplace_apps: []
+edges: []
+templates: []
